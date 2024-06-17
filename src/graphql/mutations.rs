@@ -3,26 +3,16 @@ use fake::{
     Fake,
 };
 use rand::Rng;
-use reqwest::Client;
 use serde_json::{json, Value};
+
+use crate::graphql::graphql_client::GraphQLQuery;
 
 pub struct Mutations;
 
+impl GraphQLQuery for Mutations {}
+
 impl Mutations {
-    async fn query_graphql(query: Value) -> Result<(), Box<dyn std::error::Error>> {
-        let client = Client::new();
-        let res = client
-            .post("http://localhost:4000/graphql")
-            .json(&query)
-            .send()
-            .await?;
-
-        let response_body = res.text().await?;
-        println!("Response: {}", response_body);
-        Ok(())
-    }
-
-    pub async fn create_user() -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn create_user() -> Result<Value, Box<dyn std::error::Error>> {
         let email: String = SafeEmail().fake();
 
         let query = json!({
@@ -32,8 +22,20 @@ impl Mutations {
             }
         });
 
-        Self::query_graphql(query).await?;
-        Ok(())
+        let response = Self::query_graphql(query).await?;
+        Ok(response)
+    }
+
+    pub async fn delete_user(id: String) -> Result<Value, Box<dyn std::error::Error>> {
+        let query = json!({
+            "query": "mutation DeleteUser($id: ID!) { deleteUser(id: $id) { id } }",
+            "variables": {
+                "id": id
+            }
+        });
+
+        let response = Self::query_graphql(query).await?;
+        Ok(response)
     }
 
     pub async fn update_name(id: String) -> Result<(), Box<dyn std::error::Error>> {

@@ -1,9 +1,11 @@
+mod emitter;
 mod graphql;
 
-use graphql::Mutations;
+use emitter::Emitter;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    Mutations::create_user().await?;
+    let mut emitter = Emitter::new(50, 10);
+    emitter.start().await;
     Ok(())
 }
